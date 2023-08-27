@@ -25,7 +25,7 @@ triggers:
       name: Enable Plug
       entryPoint: default
       arguments:
-        relayState: false
+        relayState: true
 
   - cron:  # disable plug
       spec: "0 22 * * *"
