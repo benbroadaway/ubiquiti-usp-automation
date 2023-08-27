@@ -4,8 +4,8 @@ Power scheduling for wifi plug from Ubiquiti.
 
 ## Concord Workflow
 
-Included in this repo is a Concord workflow definition to automate
-schuduling on and off state for a given USP plug.
+Included in this repo is a [Concord workflow](https://github.com/walmartlabs/concord)
+definition to automate schuduling on and off states for a given USP plug.
 
 It can be run as a normal project, or as a paylaod with `run.sh`.
 
