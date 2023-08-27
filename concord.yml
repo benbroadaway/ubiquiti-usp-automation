@@ -1,0 +1,148 @@
+configuration:
+  runtime: concord-v2
+  arguments:
+    defaultDockerImageCurl: "curlimages/curl:8.1.2"
+
+profiles:
+  state_on:
+    configuration:
+      arguments:
+        relayState: true
+
+  state_off:
+    configuration:
+      arguments:
+        relayState: false
+
+triggers:
+  - manual:
+      name: Disable Plug
+      entryPoint: default
+      arguments:
+        relayState: false
+
+  - manual:
+      name: Enable Plug
+      entryPoint: default
+      arguments:
+        relayState: false
+
+  - cron:  # disable plug
+      spec: "0 22 * * *"
+      timezone: "America/Chicago"
+      entryPoint: default
+      arguments:
+        relayState: false
+
+  - cron:  # enable plug
+      spec: "20 6 * * *"
+      timezone: "America/Chicago"
+      entryPoint: default
+      arguments:
+        relayState: true
+
+flows:
+  default:
+    - set:
+        unifiCreds: "${crypto.exportCredentials('unifi', 'unifi-ben', null)}"
+        # This MUST be customized (or overridden from other settings)
+        plugName: "${orDefault('plugName', 'My-USP-Plug')}"
+    - name: Export auth cookie
+      task: docker
+      in:
+        image: "${orDefault('dockerImageCurl', defaultDockerImageCurl)}"
+        env:
+          unifiHost: "${orDefault('unifiHost', 'https://192.168.1.1')}"
+          body: "${resource.writeAsJson({ 'username': unifiCreds.username, 'password': unifiCreds.password })}"
+        cmd: |
+          curl -ks -X POST \
+            --data @$body \
+            --header 'Content-Type: application/json' \
+            --dump-header headers.txt \
+            -c cookie.txt \
+            -o login.json \
+            $unifiHost/api/auth/login
+
+    - call: getCSRFHeader
+      in:
+        headersFile: headers.txt
+      out: csrfHeader
+
+    - name: Get device info
+      task: docker
+      in:
+        image: "${orDefault('dockerImageCurl', defaultDockerImageCurl)}"
+        env:
+          unifiHost: "${orDefault('unifiHost', 'https://192.168.1.1')}"
+        cmd: |
+          curl -ks -X GET \
+            -b cookie.txt \
+            -o devices.json \
+            $unifiHost/proxy/network/api/s/default/stat/device
+
+    - set:
+        currentInfo: |-
+          ${resource.asJson('devices.json').data.stream()
+              .filter(e -> e.model == 'UP1')
+              .filter(e -> e.name == 'Plug-WaterCirculator')
+              .findFirst().orElse(null)}
+
+    - name: "Dump currentInfo"
+      log: "${resource.prettyPrintJson(currentInfo)}"
+
+    - call: createPayload
+      out: rawPayload
+
+    - name: Update settings
+      task: docker
+      in:
+        image: "${orDefault('dockerImageCurl', defaultDockerImageCurl)}"
+        env:
+          unifiHost: "${orDefault('unifiHost', 'https://192.168.1.1')}"
+          payloadPath: "${resource.writeAsString(rawPayload)}"
+          csrfHeader: "${csrfHeader}"
+          deviceId: "${currentInfo._id}"
+        cmd: |
+          HTTP_CODE=$(curl -sk -X PUT \
+            -b cookie.txt \
+            --header "x-csrf-token: $csrfHeader" \
+            --data @$payloadPath \
+            -o response.json \
+            -w "%{http_code}" \
+            $unifiHost/proxy/network/api/s/default/rest/device/$deviceId)
+          echo "Got http code: $HTTP_CODE"
+    
+    - set:
+        response: "${resource.asJson('response.json')}"
+    
+    - if: "${response.meta.rc != 'ok'}"
+      then:
+        - throw: "Non-ok response: ${response}"
+
+  getCSRFHeader:
+    - set:
+        newLine: "\n"
+        csrfHeader: |-
+          ${resource.asString(headersFile)
+              .split(newLine).stream()
+              .filter(e -> e.startsWith('x-csrf-token'))
+              .map(e -> e.split(':')[1].trim())
+              .findFirst().orElse(null)}
+
+  createPayload:
+    - set:
+        rawPayload:
+          name: "${currentInfo.name}"
+          outlet_overrides:
+            - "${currentInfo.outlet_overrides[0]}"
+          led_override: "${currentInfo.led_override}"
+          led_override_color_brightness: "${currentInfo.led_override_color_brightness}"
+          led_override_color: "${currentInfo.led_override_color}"
+          config_network: "${currentInfo.config_network}"
+          mgmt_network_id: "${currentInfo.mgmt_network_id}"
+
+    - name: "Update relay_state to: ${relayState}"
+      expr: "${rawPayload.outlet_overrides[0].relay_state = relayState}"
+
+    - name: "Dump rawPayload (relay_state should be ${relayState})"
+      log: "${resource.prettyPrintJson(rawPayload)}"
