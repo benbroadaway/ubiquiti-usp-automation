@@ -99,7 +99,7 @@ flows:
         image: "${orDefault('dockerImageCurl', defaultDockerImageCurl)}"
         env:
           unifiHost: "${orDefault('unifiHost', 'https://192.168.1.1')}"
-          payloadPath: "${resource.writeAsString(rawPayload)}"
+          payloadPath: "${resource.writeAsJson(rawPayload)}"
           csrfHeader: "${csrfHeader}"
           deviceId: "${currentInfo._id}"
         cmd: |
