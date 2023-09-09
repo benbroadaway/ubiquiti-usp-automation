@@ -1,4 +1,4 @@
-# Ubiquity Unifi USP-Plug Automation
+# Ubiquiti Unifi USP-Plug Automation
 
 Power scheduling for wifi plug from Ubiquiti.
 
