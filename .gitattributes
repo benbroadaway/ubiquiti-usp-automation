@@ -1,0 +1,9 @@
+#
+# https://help.github.com/articles/dealing-with-line-endings/
+#
+# Linux start pkg should use lf
+/gradlew        text eol=lf
+
+# These are Windows pkg files and should use crlf
+*.bat           text eol=crlf
+

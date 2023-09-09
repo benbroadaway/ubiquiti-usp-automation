@@ -2,12 +2,32 @@
 
 Power scheduling for wifi plug from Ubiquiti.
 
+## Project Setup
+
+The project requires JDK 17 and Gradle for development.
+
+Install some gradle version (e.g. on macos)
+
+```text
+$ brew install gradle
+```
+
+Initialize wrapper, customize url and version as necessary
+
+```text
+$ gradle wrapper --gradle-distribution-url https://services.gradle.org/distributions/gradle-8.3-all.zip
+$ ./gradlew --version                                                                                                                                                                                  ─╯
+------------------------------------------------------------
+Gradle 8.3
+------------------------------------------------------------
+```
+
 ## Concord Workflow
 
 Included in this repo is a [Concord workflow](https://github.com/walmartlabs/concord)
-definition to automate schuduling on and off states for a given USP plug.
+definition to automate scheduling on and off states for a given USP plug.
 
-It can be run as a normal project, or as a paylaod with `run.sh`.
+It can be run as a normal project, or as a payload with `run.sh`.
 
 ```text
 # enable power
@@ -48,7 +68,7 @@ $ curl -ks -X GET \
 ### Update USP Settings
 
 The current info for the device can be modified to send back with different
-settings. This requies the CSRF header returned from a previous call.
+settings. This requires the CSRF header returned from a previous call.
 
 - The end of the url path (`{deviceId}` below) must be the device ID to update
 - The `relay_state` attribute in the payload controls the power outlet.
