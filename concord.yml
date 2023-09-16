@@ -1,7 +1,7 @@
 configuration:
   runtime: concord-v2
   dependencies:
-    - mvn://org.apache.groovy:groovy-all:pom:4.0.13
+    - "mvn://org.benbroadaway.unifi:unifi-concord-task:0.0.3"
 
 profiles:
   state_on:
@@ -45,7 +45,10 @@ flows:
   default:
     - set:
         unifiCreds: "${crypto.exportCredentials('unifi', 'unifi-ben', null)}"
-        # This MUST be customized (or overridden from other settings)
-        plugName: "${orDefault('plugName', 'My-USP-Plug')}"
-    - name: "Run USPToggle script (relayState == ${relayState})"
-      script: src/main/groovy/pkg/USPToggle.groovy
+    # unifiHost and uspName parameters provided by project configuration arguments
+    - task: unifi
+      in:
+        action: setUspState
+        username: "${unifiCreds.username}"
+        password: "${unifiCreds.password}"
+        relayState: "${relayState}"

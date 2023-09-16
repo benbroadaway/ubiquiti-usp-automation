@@ -1,26 +1,6 @@
 # Ubiquiti Unifi USP-Plug Automation
 
-Power scheduling for wifi plug from Ubiquiti.
-
-## Project Setup
-
-The project requires JDK 17 and Gradle for development.
-
-Install some gradle version (e.g. on macos)
-
-```text
-$ brew install gradle
-```
-
-Initialize wrapper, customize url and version as necessary
-
-```text
-$ gradle wrapper --gradle-distribution-url https://services.gradle.org/distributions/gradle-8.3-all.zip
-$ ./gradlew --version                                                                                                                                                                                  ─╯
-------------------------------------------------------------
-Gradle 8.3
-------------------------------------------------------------
-```
+Power scheduling for Wi-Fi plug from Ubiquiti.
 
 ## Concord Workflow
 
