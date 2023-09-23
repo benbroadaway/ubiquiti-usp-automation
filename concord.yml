@@ -1,7 +1,7 @@
 configuration:
   runtime: concord-v2
   dependencies:
-    - "mvn://org.benbroadaway.unifi:unifi-concord-task:0.0.4"
+    - "mvn://org.benbroadaway.unifi:unifi-concord-task:0.0.6"
 
 profiles:
   state_on:
@@ -52,3 +52,4 @@ flows:
         username: "${unifiCreds.username}"
         password: "${unifiCreds.password}"
         relayState: "${relayState}"
+        outletIndex: 1
